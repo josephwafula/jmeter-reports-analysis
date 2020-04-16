@@ -2,31 +2,33 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
-import os
+
 st.title('Performance Result Analysis')
 
+
 # read the data from csv file
-
-
-def file_selector(folder_path='.'):
-    filenames = os.listdir(folder_path)
-    selected_filename = st.selectbox('Select a csv file', filenames)
-    return os.path.join(folder_path, selected_filename)
+def file_selector():
+    uploaded_file = st.file_uploader("Choose an image...", type=['csv', 'jtl'])
+    if uploaded_file is not None:
+        return uploaded_file
 
 
 filename = file_selector()
-st.write('You selected `%s`' % filename)
 
 
-@st.cache(allow_output_mutation=True)
 def get_data():
-    data = pd.read_csv(filename)
+    if filename is None:
+        st.warning('No file selected.')
+        column_names = ['timeStamp', 'elapsed', 'responseCode', 'threadName', 'success', 'allThreads']
+        data = pd.DataFrame(columns=column_names)
+    else:
+        data = pd.read_csv(filename)
     return data
 
 
-data_load_state = st.text('Loading data...')
+# data_load_state = st.text('Loading data...')
 df = get_data()
-data_load_state.text('')
+# data_load_state.text('')
 
 # create copy of data for later
 origin_df = df
@@ -60,5 +62,5 @@ if st.checkbox('Show response time scatter chart'):
     origin_df['timeStamp'] = pd.to_datetime(origin_df['timeStamp'], unit='ms')
     fig = px.scatter(origin_df, x='timeStamp', y='elapsed', color='elapsed')
 
-# Plot!
+    # Plot!
     st.plotly_chart(fig)
